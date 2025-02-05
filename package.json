@@ -1,0 +1,22 @@
+{
+	"name": "XtensionMessenger",
+	"version": "1.0.0",
+	"description": "this abstracts extension message passing either using oneTime messaging or port message NOTE THIS WAS CREATED WITH FIREFOX IN MIND",
+	"main": "index.ts",
+	"build": "tsc",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"firefox",
+		"browser extension",
+		"message passing",
+		"webextension"
+	],
+	"dependencies": {
+		"@types/firefox-webext-browser": "^120.0.4",
+		"@types/node": "^22.9.0"
+	},
+	"author": "DUKE CHIKE OPARA",
+	"license": "ISC"
+}

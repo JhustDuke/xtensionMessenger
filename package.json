@@ -1,22 +1,37 @@
 {
-	"name": "XtensionMessenger",
+	"name": "xtension-messenger",
 	"version": "1.0.0",
-	"description": "this abstracts extension message passing either using oneTime messaging or port message NOTE THIS WAS CREATED WITH FIREFOX IN MIND",
-	"main": "index.ts",
-	"build": "tsc",
+	"description": "Abstracts extension message passing for one-off messaging or port messaging. N/B: This was created with Firefox in mind. This version does not handle async operations; contributions are welcome.",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"build": "webpack && tsc"
 	},
 	"keywords": [
 		"firefox",
 		"browser extension",
 		"message passing",
-		"webextension"
+		"typescript"
 	],
 	"dependencies": {
-		"@types/firefox-webext-browser": "^120.0.4",
-		"@types/node": "^22.9.0"
+		"@types/firefox-webext-browser": "^120.0.4"
 	},
-	"author": "DUKE CHIKE OPARA",
-	"license": "ISC"
+	"devDependencies": {
+		"ts-loader": "^9.5.2",
+		"typescript": "^5.7.3",
+		"webpack": "^5.97.1",
+		"webpack-cli": "^6.0.1"
+	},
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/JhustDuke/xtensionMessenger.git"
+	},
+	"homepage": "https://github.com/JhustDuke/xtensionMessenger#readme",
+	"bugs": {
+		"url": "https://github.com/JhustDuke/xtensionMessenger/issues"
+	},
+	"license": "MIT"
 }

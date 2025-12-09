@@ -1,37 +1,40 @@
 {
-	"name": "xtension-messenger",
-	"version": "1.0.0",
-	"description": "Abstracts extension message passing for one-off messaging or port messaging. N/B: This was created with Firefox in mind. This version does not handle async operations; contributions are welcome.",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"scripts": {
-		"build": "webpack && tsc"
-	},
-	"keywords": [
-		"firefox",
-		"browser extension",
-		"message passing",
-		"typescript"
-	],
-	"dependencies": {
-		"@types/firefox-webext-browser": "^120.0.4"
-	},
-	"devDependencies": {
-		"ts-loader": "^9.5.2",
-		"typescript": "^5.7.3",
-		"webpack": "^5.97.1",
-		"webpack-cli": "^6.0.1"
-	},
+	"name": "extensionsjs",
+	"version": "1.1.0",
+	"main": "dist/oneTimeMsg.umd.js",
+	"module": "dist/oneTimeMsg.es.js",
+	"types": "dist/types/oneTimeMsg.d.ts",
 	"files": [
 		"dist"
 	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/JhustDuke/xtensionMessenger.git"
+	"url": "https://github.com/JhustDuke/xtensionMessenger",
+	"scripts": {
+		"build": "vite build",
+		"dev:bundler": "vite build --watch ",
+		"dev:server": "web-ext run",
+		"test": "jest",
+		"test:watch": "jest --watch"
 	},
-	"homepage": "https://github.com/JhustDuke/xtensionMessenger#readme",
-	"bugs": {
-		"url": "https://github.com/JhustDuke/xtensionMessenger/issues"
+	"description": "Browser extension messaging factory with TypeScript types",
+	"author": "jhustduke",
+	"keywords": [
+		"typescript",
+		"browser-extension",
+		"webextension"
+	],
+	"license": "ISC",
+	"devDependencies": {
+		"@types/firefox-webext-browser": "^120.0.4",
+		"@types/jest": "^30.0.0",
+		"@types/webextension-polyfill": "^0.12.1",
+		"jest": "^30.2.0",
+		"jest-webextension-mock": "^4.0.0",
+		"ts-jest": "^29.4.6",
+		"typescript": "^5.9.3",
+		"vite": "^7.2.6"
 	},
-	"license": "MIT"
+	"dependencies": {
+		"@types/node": "^22.9.0",
+		"webextension-polyfill": "^0.12.0"
+	}
 }

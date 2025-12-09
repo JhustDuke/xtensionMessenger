@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"module": "CommonJS",
+		"types": ["firefox-webext-browser", "node", "jest"],
+		"outDir": "dist", // Outputs compiled JS files to 'src'
+		"rootDir": "src", // Assumes your source files are in 'ts' directory
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"incremental": true,
+		"declaration": true,
+		"declarationDir": "dist/types",
+		"emitDeclarationOnly": false,
+		"experimentalDecorators": true,
+
+		"emitDecoratorMetadata": true
+	},
+	"include": ["src/factory/oneTimeMsg.ts", "src/interfaces/**/*"],
+	"exclude": [
+		"node_modules",
+		"**/*.spec.ts" // Excludes test files
+		// Excludes all files in 'factory' folder within 'ts'
+	]
+}

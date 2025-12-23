@@ -2,13 +2,14 @@ import {
 	TabQueryPropsInterface,
 	SendToContentInterface,
 	MessageToBackgroundInterface,
-	onMessageAsyncInterface,
+	OnMessageAsyncInterface,
 	OnMessageSyncInterface,
 	BrowserTabInterface,
 	FutureTabQueryProps,
+	ExtensionMessageInterface,
 } from "../interfaces"; // adjust the path
 
-export const oneTimeMsgFactory = (function (scriptname?: string) {
+export const oneTimeMsgFactory = function (scriptname?: string) {
 	const logTime = new Date();
 	console.log(scriptname, "ran", logTime.getHours(), ":", logTime.getMinutes());
 
@@ -82,7 +83,7 @@ export const oneTimeMsgFactory = (function (scriptname?: string) {
 		const { validateMessage, validateSender, reply = "default reply" } = opts;
 
 		const handler = function (
-			message: unknown,
+			message: ExtensionMessageInterface,
 			sender: browser.runtime.MessageSender,
 			sendResponse: (response?: any) => void
 		) {
@@ -104,11 +105,11 @@ export const oneTimeMsgFactory = (function (scriptname?: string) {
 	};
 
 	// --- ASYNC LISTENER ---
-	const onMessageAsync = function (opts: onMessageAsyncInterface) {
+	const onMessageAsync = function (opts: OnMessageAsyncInterface) {
 		const { validateMessage, validateSender, onAsyncCb } = opts;
 
 		const handler = function (
-			message: unknown,
+			message: ExtensionMessageInterface,
 			sender: browser.runtime.MessageSender,
 			sendResponse: (response: {
 				isPassed: boolean;
@@ -158,4 +159,4 @@ export const oneTimeMsgFactory = (function (scriptname?: string) {
 		onMessageAsync,
 		getTabsFn,
 	};
-})();
+};

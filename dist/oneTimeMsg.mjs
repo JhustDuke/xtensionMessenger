@@ -1,4 +1,4 @@
-const w = (function(d) {
+const w = function(d) {
   const u = /* @__PURE__ */ new Date();
   console.log(d, "ran", u.getHours(), ":", u.getMinutes());
   const l = function(a) {
@@ -66,7 +66,7 @@ const w = (function(d) {
     },
     getTabsFn: l
   };
-})();
+};
 export {
   w as oneTimeMsgFactory
 };

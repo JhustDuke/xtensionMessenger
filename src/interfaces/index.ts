@@ -64,14 +64,23 @@ export interface BrowserTabInterface {
 }
 
 /**
+ * The structure for messaging across scripts.
+ * Generic T allows typing the message payload.
+ */
+export interface ExtensionMessageInterface<T = any> {
+	type: string;
+	payload?: T;
+}
+
+/**
  * Defines the structure for sending a message to a content script.
  * Generic T allows typing the message payload.
  */
-export interface SendToContentInterface {
+export interface SendToContentInterface<T = any> {
 	/** Optional tab query properties to target specific tabs */
 	tabQueryProps?: TabQueryPropsInterface;
 	/** The message payload to send */
-	message?: Record<string, unknown>;
+	message?: ExtensionMessageInterface<T>;
 	/** Callback executed if sending the message fails */
 	errorCb: (errorMsg: Error | string) => void | boolean;
 	/** Callback executed when the message succeeds */
@@ -82,70 +91,62 @@ export interface SendToContentInterface {
  * Defines the structure for sending a message to a background script.
  * Generic types T (message) and R (response) allow type safety.
  */
-export interface MessageToBackgroundInterface {
+export interface MessageToBackgroundInterface<T = any, R = any> {
 	/** The message payload to send to the background script */
-	message: Record<string, unknown>;
+	message: ExtensionMessageInterface<T>;
 	/** Callback executed if sending the message fails */
 	errorCb: (error?: Error | string) => void;
 	/** Callback executed with the response from the background script */
-	successCb: (response?: unknown) => void | boolean;
+	successCb: (response?: R) => void | boolean;
 }
 
 /**
- * Defines the structure of an object representing a message handler
- * that receives messages in either background or content scripts.
+ * Defines the structure of a synchronous message handler.
  * Generic R allows typing the reply payload.
  */
-export interface OnMessageSyncInterface {
+export interface OnMessageSyncInterface<R = any> {
 	/**
 	 * Optional function to validate the message structure or content
 	 * before processing it.
 	 */
-	validateMessage?: (message: unknown) => boolean;
+	validateMessage?: (message: ExtensionMessageInterface) => boolean;
 	/**
 	 * Optional function to validate the sender of the message.
 	 * Useful to ensure messages come from expected tabs or extensions.
 	 */
 	validateSender?: (sender: browser.runtime.MessageSender) => boolean;
 	/** Optional reply object to send back to the sender */
-	reply?: unknown;
-	/** Whether the handler is asynchronous (returns a promise) */
-}
-export interface OnMessageSyncInterface {
-	/**
-	 * Optional function to validate the message structure or content
-	 * before processing it.
-	 */
-	validateMessage?: (message: unknown) => boolean;
-	/**
-	 * Optional function to validate the sender of the message.
-	 * Useful to ensure messages come from expected tabs or extensions.
-	 */
-	validateSender?: (sender: browser.runtime.MessageSender) => boolean;
-	/** Optional reply object to send back to the sender */
-	reply?: unknown;
-	/** Whether the handler is asynchronous (returns a promise) */
+	reply?: R;
 }
 
-export interface onMessageAsyncInterface {
-	validateMessage?: (msg: unknown) => boolean;
-
+/**
+ * Defines the structure of an asynchronous message handler.
+ */
+export interface OnMessageAsyncInterface<R = any> {
+	validateMessage?: (msg: ExtensionMessageInterface) => boolean;
 	validateSender?: (sender: browser.runtime.MessageSender) => boolean;
 	onAsyncCb?: (
-		message: unknown,
+		message: R,
 		sender: browser.runtime.MessageSender
 	) => Promise<any>;
 }
 
+/**
+ * Standardized response format for handlers.
+ */
 export interface StandardResponse {
 	isPassed: boolean;
 	response?: any;
 	data?: unknown;
 }
-export interface handlerInterface {
+
+/**
+ * Common handler function type.
+ */
+export interface HandlerInterface {
 	(
-		message: unknown,
+		message: ExtensionMessageInterface,
 		sender: browser.runtime.MessageSender,
-		sendResponse?: (payload: StandardResponse) => void
+		sendResponse: (payload: StandardResponse) => void
 	): boolean;
 }

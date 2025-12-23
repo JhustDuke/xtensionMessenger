@@ -1,5 +1,5 @@
 {
-	"name": "xtensionmessenger",
+	"name": "xtension-messenger",
 	"version": "2.0.0",
 	"main": "dist/oneTimeMsg.umd.js",
 	"module": "dist/oneTimeMsg.es.js",

@@ -82,9 +82,9 @@ export interface SendToContentInterface<T = any> {
 	/** The message payload to send */
 	message?: ExtensionMessageInterface<T>;
 	/** Callback executed if sending the message fails */
-	errorCb: (errorMsg: Error | string) => void | boolean;
+	errorCb?: (errorMsg: Error | string) => void | boolean;
 	/** Callback executed when the message succeeds */
-	successCb: (successMsg: unknown) => void | boolean;
+	successCb?: (successMsg: unknown) => void | boolean;
 }
 
 /**
@@ -95,9 +95,9 @@ export interface MessageToBackgroundInterface<T = any, R = any> {
 	/** The message payload to send to the background script */
 	message: ExtensionMessageInterface<T>;
 	/** Callback executed if sending the message fails */
-	errorCb: (error?: Error | string) => void;
+	errorCb?: (error?: Error | string) => void;
 	/** Callback executed with the response from the background script */
-	successCb: (response?: R) => void | boolean;
+	successCb?: (response?: R) => void | boolean;
 }
 
 /**

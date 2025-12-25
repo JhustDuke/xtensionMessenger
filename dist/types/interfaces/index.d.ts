@@ -119,7 +119,7 @@ export interface OnMessageSyncInterface<R = any> {
 export interface OnMessageAsyncInterface<R = any> {
     validateMessage?: (msg: ExtensionMessageInterface) => boolean;
     validateSender?: (sender: browser.runtime.MessageSender) => boolean;
-    onAsyncCb?: (message: R, sender: browser.runtime.MessageSender) => Promise<any>;
+    onAsyncCb?: (message: ExtensionMessageInterface, sender: browser.runtime.MessageSender) => Promise<any>;
 }
 /**
  * Standardized response format for handlers.

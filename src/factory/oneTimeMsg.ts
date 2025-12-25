@@ -136,6 +136,10 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 			(async function () {
 				try {
 					const data = await onAsyncCb?.(message, sender);
+
+					if (data === false) {
+						throw Error("async request returned a falsy value");
+					}
 					sendResponse?.({ isPassed: true, data, response: "async success" });
 				} catch (e: any) {
 					sendResponse?.({

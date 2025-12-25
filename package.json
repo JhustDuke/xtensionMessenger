@@ -1,8 +1,8 @@
 {
 	"name": "xtension-messenger",
-	"version": "2.0.2",
+	"version": "2.0.4",
 	"main": "dist/oneTimeMsg.umd.js",
-	"module": "dist/oneTimeMsg.es.js",
+	"module": "dist/oneTimeMsg.mjs",
 	"types": "dist/types/factory/oneTimeMsg.d.ts",
 	"files": [
 		"dist"

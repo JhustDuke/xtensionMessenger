@@ -1,24 +1,24 @@
-const w = function(d) {
+const m = function(d) {
   const u = /* @__PURE__ */ new Date();
   console.log(d, "ran", u.getHours(), ":", u.getMinutes());
-  const l = function(a) {
+  const l = function(r) {
     return new Promise((e, s) => {
-      a ? e(browser.tabs.query(a)) : s(new Error("tab querying failed"));
+      r ? e(browser.tabs.query(r)) : s(new Error("tab querying failed"));
     });
-  }, f = async function(a) {
-    const { message: e, errorCb: s, successCb: o } = a;
+  }, f = async function(r) {
+    const { message: e, errorCb: s, successCb: o } = r;
     try {
-      const r = await browser.runtime.sendMessage(e);
-      o(r);
-    } catch (r) {
-      s(r.message || r);
+      const a = await browser.runtime.sendMessage(e);
+      o(a);
+    } catch (a) {
+      s(a.message || a);
     }
   };
   return {
     messageBackgroundScript: f,
     messagePopupScript: f,
-    messageContentScript: async function(a) {
-      const { tabQueryProps: e, message: s, errorCb: o, successCb: r } = a;
+    messageContentScript: async function(r) {
+      const { tabQueryProps: e, message: s, errorCb: o, successCb: a } = r;
       try {
         if (!e)
           throw new Error("tabQueryProps is undefined");
@@ -31,19 +31,19 @@ const w = function(d) {
           c,
           s
         );
-        r(t);
+        a(t);
       } catch (n) {
         o(n);
       }
     },
-    onMessageSync: function(a) {
-      const { validateMessage: e, validateSender: s, reply: o = "default reply" } = a, r = function(n, c, t) {
+    onMessageSync: function(r) {
+      const { validateMessage: e, validateSender: s, reply: o = "default reply" } = r, a = function(n, c, t) {
         return e && !e(n) ? (t({ status: "fail", error: "validateMessage failed" }), !1) : s && !s(c) ? (t({ status: "fail", error: "validateSender failed" }), !1) : (t({ status: "ok", data: o }), !1);
       };
-      browser.runtime.onMessage.addListener(r);
+      browser.runtime.onMessage.addListener(a);
     },
-    onMessageAsync: function(a) {
-      const { validateMessage: e, validateSender: s, onAsyncCb: o } = a, r = function(n, c, t) {
+    onMessageAsync: function(r) {
+      const { validateMessage: e, validateSender: s, onAsyncCb: o } = r, a = function(n, c, t) {
         return e && !e(n) ? (t?.({
           isPassed: !1,
           response: "validateMessage failed"
@@ -53,6 +53,8 @@ const w = function(d) {
         }), !1) : ((async function() {
           try {
             const i = await o?.(n, c);
+            if (i === !1)
+              throw Error("async request returned a falsy value");
             t?.({ isPassed: !0, data: i, response: "async success" });
           } catch (i) {
             t?.({
@@ -62,11 +64,11 @@ const w = function(d) {
           }
         })(), !0);
       };
-      browser.runtime.onMessage.addListener(r);
+      browser.runtime.onMessage.addListener(a);
     },
     getTabsFn: l
   };
 };
 export {
-  w as oneTimeMsgFactory
+  m as oneTimeMsgFactory
 };

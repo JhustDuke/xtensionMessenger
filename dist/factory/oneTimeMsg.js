@@ -168,6 +168,9 @@ var oneTimeMsgFactory = function (scriptname) {
                                 return [4 /*yield*/, (onAsyncCb === null || onAsyncCb === void 0 ? void 0 : onAsyncCb(message, sender))];
                             case 1:
                                 data = _b.sent();
+                                if (data === false) {
+                                    throw Error("async request returned a falsy value");
+                                }
                                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({ isPassed: true, data: data, response: "async success" });
                                 return [3 /*break*/, 3];
                             case 2:

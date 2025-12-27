@@ -57,7 +57,7 @@ const w = function(l) {
           return "default reply";
         }
       } = a, r = function(n, u, t) {
-        return e && !e(n) ? (t({ status: !1, message: "validateMessage failed" }), !1) : s && !s(u) ? (t({ status: !1, message: "validateSender failed" }), !1) : (t({ status: !0, data: o }), !1);
+        return e && !e(n) ? (t({ status: !1, message: "validateMessage failed" }), !1) : s && !s(u) ? (t({ status: !1, message: "validateSender failed" }), !1) : (t({ status: !0, data: o() }), !1);
       };
       browser.runtime.onMessage.addListener(r);
     },

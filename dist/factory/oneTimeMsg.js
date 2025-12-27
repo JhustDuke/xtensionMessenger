@@ -144,7 +144,7 @@ var oneTimeMsgFactory = function (scriptname) {
                 sendResponse({ status: false, message: "validateSender failed" });
                 return false;
             }
-            sendResponse({ status: true, data: replyCb });
+            sendResponse({ status: true, data: replyCb() });
             return false;
         };
         browser.runtime.onMessage.addListener(handler);

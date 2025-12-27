@@ -65,7 +65,7 @@ export interface BrowserTabInterface {
  * The structure for messaging across scripts.
  * Generic T allows typing the message payload.
  */
-export interface ExtensionMessageInterface<T = any> {
+export interface ExtensionMessageInterface<T = unknown> {
     type: string;
     payload?: T;
 }
@@ -73,15 +73,15 @@ export interface ExtensionMessageInterface<T = any> {
  * Defines the structure for sending a message to a content script.
  * Generic T allows typing the message payload.
  */
-export interface SendToContentInterface<T = any> {
+export interface SendToContentInterface {
     /** Optional tab query properties to target specific tabs */
     tabQueryProps?: TabQueryPropsInterface;
     /** The message payload to send */
-    message?: ExtensionMessageInterface<T>;
+    message?: ExtensionMessageInterface;
     /** Callback executed if sending the message fails */
-    errorCb: (errorMsg: Error | string) => void | boolean;
+    errorCb: (errorMsg: StandardResponse) => void | boolean;
     /** Callback executed when the message succeeds */
-    successCb: (successMsg: unknown) => void | boolean;
+    successCb: (successMsg: StandardResponse) => void | boolean;
 }
 /**
  * Defines the structure for sending a message to a background script.
@@ -116,7 +116,7 @@ export interface OnMessageSyncInterface {
 /**
  * Defines the structure of an asynchronous message handler.
  */
-export interface OnMessageAsyncInterface<R = any> {
+export interface OnMessageAsyncInterface {
     validateMessage?: (msg: ExtensionMessageInterface) => boolean;
     validateSender?: (sender: browser.runtime.MessageSender) => boolean;
     onAsyncCb?: (message: ExtensionMessageInterface, sender: browser.runtime.MessageSender) => Promise<any> | boolean;
@@ -124,10 +124,10 @@ export interface OnMessageAsyncInterface<R = any> {
 /**
  * Standardized response format for handlers.
  */
-export interface StandardResponse {
+export interface StandardResponse<T = unknown> {
     status: boolean;
-    message?: any;
-    data?: unknown;
+    message?: string;
+    data?: T;
 }
 /**
  * Common handler function type.

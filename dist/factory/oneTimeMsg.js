@@ -39,7 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.oneTimeMsgFactory = void 0;
 var oneTimeMsgFactory = function (scriptname) {
     var logTime = new Date();
-    console.log(scriptname, "ran", logTime.getHours(), ":", logTime.getMinutes());
+    console.log(scriptname || "unknown-script", "ran", logTime.getHours(), ":", logTime.getMinutes());
     /**
      * Returns all active tabs based on query options
      */
@@ -59,21 +59,25 @@ var oneTimeMsgFactory = function (scriptname) {
     function messageBackgroundScript(options) {
         return __awaiter(this, void 0, void 0, function () {
             var message, errorCb, successCb, response, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         message = options.message, errorCb = options.errorCb, successCb = options.successCb;
-                        _a.label = 1;
+                        _b.label = 1;
                     case 1:
-                        _a.trys.push([1, 3, , 4]);
+                        _b.trys.push([1, 3, , 4]);
                         return [4 /*yield*/, browser.runtime.sendMessage(message)];
                     case 2:
-                        response = _a.sent();
-                        successCb(response);
+                        response = _b.sent();
+                        successCb({ status: true, data: response });
                         return [3 /*break*/, 4];
                     case 3:
-                        error_1 = _a.sent();
-                        errorCb(error_1.message || error_1);
+                        error_1 = _b.sent();
+                        errorCb({
+                            status: false,
+                            message: (_a = error_1.message) !== null && _a !== void 0 ? _a : "message to background script failed",
+                        });
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -88,32 +92,36 @@ var oneTimeMsgFactory = function (scriptname) {
     var messageContentScript = function (options) {
         return __awaiter(this, void 0, void 0, function () {
             var tabQueryProps, message, errorCb, successCb, tabs, targetTab, messageResponse, error_2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         tabQueryProps = options.tabQueryProps, message = options.message, errorCb = options.errorCb, successCb = options.successCb;
-                        _a.label = 1;
+                        _b.label = 1;
                     case 1:
-                        _a.trys.push([1, 4, , 5]);
+                        _b.trys.push([1, 4, , 5]);
                         if (!tabQueryProps) {
                             throw new Error("tabQueryProps is undefined");
                         }
                         return [4 /*yield*/, getTabsFn(tabQueryProps)];
                     case 2:
-                        tabs = _a.sent();
+                        tabs = _b.sent();
                         targetTab = tabs.length > 0 ? tabs[0].id : null;
                         if (!targetTab) {
-                            errorCb(new Error("no valid tab found"));
+                            errorCb({ status: false, message: "no tabs found" });
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, browser.tabs.sendMessage(targetTab, message)];
                     case 3:
-                        messageResponse = _a.sent();
-                        successCb(messageResponse);
+                        messageResponse = _b.sent();
+                        successCb({ status: true, data: messageResponse });
                         return [3 /*break*/, 5];
                     case 4:
-                        error_2 = _a.sent();
-                        errorCb(error_2);
+                        error_2 = _b.sent();
+                        errorCb({
+                            status: false,
+                            message: (_a = error_2.message) !== null && _a !== void 0 ? _a : "unknown tab querying error",
+                        });
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
@@ -129,14 +137,14 @@ var oneTimeMsgFactory = function (scriptname) {
         } : _a;
         var handler = function (message, sender, sendResponse) {
             if (validateMessage && !validateMessage(message)) {
-                sendResponse({ status: "fail", error: "validateMessage failed" });
+                sendResponse({ status: false, message: "validateMessage failed" });
                 return false;
             }
             if (validateSender && !validateSender(sender)) {
-                sendResponse({ status: "fail", error: "validateSender failed" });
+                sendResponse({ status: false, message: "validateSender failed" });
                 return false;
             }
-            sendResponse({ status: "ok", data: replyCb });
+            sendResponse({ status: true, data: replyCb });
             return false;
         };
         browser.runtime.onMessage.addListener(handler);
@@ -147,15 +155,15 @@ var oneTimeMsgFactory = function (scriptname) {
         var handler = function (message, sender, sendResponse) {
             if (validateMessage && !validateMessage(message)) {
                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
-                    isPassed: false,
-                    response: "validateMessage failed",
+                    status: false,
+                    message: "validateMessage failed",
                 });
                 return false;
             }
             if (validateSender && !validateSender(sender)) {
                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
-                    isPassed: false,
-                    response: "validateSender failed",
+                    status: false,
+                    message: "validateSender failed",
                 });
                 return false;
             }
@@ -170,16 +178,20 @@ var oneTimeMsgFactory = function (scriptname) {
                                 return [4 /*yield*/, (onAsyncCb === null || onAsyncCb === void 0 ? void 0 : onAsyncCb(message, sender))];
                             case 1:
                                 data = _b.sent();
-                                if (data === false) {
-                                    throw Error("async request returned a falsy value");
+                                if (!data) {
+                                    throw new Error("onMessageAsync request returned a falsy value");
                                 }
-                                sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({ isPassed: true, data: data, response: "async success" });
+                                sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
+                                    status: true,
+                                    data: data,
+                                    message: "onMessageAsync success",
+                                });
                                 return [3 /*break*/, 3];
                             case 2:
                                 e_1 = _b.sent();
                                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
-                                    isPassed: false,
-                                    response: (_a = e_1 === null || e_1 === void 0 ? void 0 : e_1.message) !== null && _a !== void 0 ? _a : "async error",
+                                    status: false,
+                                    message: (_a = e_1 === null || e_1 === void 0 ? void 0 : e_1.message) !== null && _a !== void 0 ? _a : "onMessageAsync returned an error",
                                 });
                                 return [3 /*break*/, 3];
                             case 3: return [2 /*return*/];

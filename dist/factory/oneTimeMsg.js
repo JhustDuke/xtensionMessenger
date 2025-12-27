@@ -56,7 +56,7 @@ var oneTimeMsgFactory = function (scriptname) {
     /**
      * Send a message to the background script
      */
-    var messageBackgroundScript = function (options) {
+    function messageBackgroundScript(options) {
         return __awaiter(this, void 0, void 0, function () {
             var message, errorCb, successCb, response, error_1;
             return __generator(this, function (_a) {
@@ -79,7 +79,7 @@ var oneTimeMsgFactory = function (scriptname) {
                 }
             });
         });
-    };
+    }
     //same struc as messageBackgroundScript kept for eaase of use
     var messagePopupScript = messageBackgroundScript;
     /**
@@ -124,7 +124,9 @@ var oneTimeMsgFactory = function (scriptname) {
      * Listen for messages in background or content scripts
      */
     var onMessageSync = function (opts) {
-        var validateMessage = opts.validateMessage, validateSender = opts.validateSender, _a = opts.reply, reply = _a === void 0 ? "default reply" : _a;
+        var validateMessage = opts.validateMessage, validateSender = opts.validateSender, _a = opts.replyCb, replyCb = _a === void 0 ? function () {
+            return "default reply";
+        } : _a;
         var handler = function (message, sender, sendResponse) {
             if (validateMessage && !validateMessage(message)) {
                 sendResponse({ status: "fail", error: "validateMessage failed" });
@@ -134,7 +136,7 @@ var oneTimeMsgFactory = function (scriptname) {
                 sendResponse({ status: "fail", error: "validateSender failed" });
                 return false;
             }
-            sendResponse({ status: "ok", data: reply });
+            sendResponse({ status: "ok", data: replyCb });
             return false;
         };
         browser.runtime.onMessage.addListener(handler);

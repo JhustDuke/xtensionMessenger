@@ -7,11 +7,18 @@ import {
 	BrowserTabInterface,
 	FutureTabQueryProps,
 	ExtensionMessageInterface,
+	StandardResponse,
 } from "../interfaces"; // adjust the path
 
 export const oneTimeMsgFactory = function (scriptname?: string) {
 	const logTime = new Date();
-	console.log(scriptname, "ran", logTime.getHours(), ":", logTime.getMinutes());
+	console.log(
+		scriptname || "unknown-script",
+		"ran",
+		logTime.getHours(),
+		":",
+		logTime.getMinutes()
+	);
 
 	/**
 	 * Returns all active tabs based on query options
@@ -31,18 +38,23 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 	/**
 	 * Send a message to the background script
 	 */
-	const messageBackgroundScript = async function (
-		options: MessageToBackgroundInterface
-	) {
+	async function messageBackgroundScript(options: {
+		message: ExtensionMessageInterface;
+		successCb: (response: StandardResponse) => void;
+		errorCb: (error: StandardResponse) => void;
+	}) {
 		const { message, errorCb, successCb } = options;
 
 		try {
 			const response = await browser.runtime.sendMessage(message);
-			successCb(response);
+			successCb({ status: true, data: response });
 		} catch (error: any) {
-			errorCb(error.message || error);
+			errorCb({
+				status: false,
+				message: error.message ?? "message to background script failed",
+			});
 		}
-	};
+	}
 
 	//same struc as messageBackgroundScript kept for eaase of use
 	const messagePopupScript = messageBackgroundScript;
@@ -62,7 +74,7 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 			const targetTab = tabs.length > 0 ? tabs[0].id : null;
 
 			if (!targetTab) {
-				errorCb(new Error("no valid tab found"));
+				errorCb({ status: false, message: "no tabs found" });
 				return;
 			}
 
@@ -70,9 +82,12 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 				targetTab,
 				message
 			);
-			successCb(messageResponse);
+			successCb({ status: true, data: messageResponse });
 		} catch (error: any) {
-			errorCb(error);
+			errorCb({
+				status: false,
+				message: error.message ?? "unknown tab querying error",
+			});
 		}
 	};
 
@@ -80,24 +95,30 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 	 * Listen for messages in background or content scripts
 	 */
 	const onMessageSync = function (opts: OnMessageSyncInterface) {
-		const { validateMessage, validateSender, reply = "default reply" } = opts;
+		const {
+			validateMessage,
+			validateSender,
+			replyCb = function () {
+				return "default reply";
+			},
+		} = opts;
 
 		const handler = function (
 			message: ExtensionMessageInterface,
 			sender: browser.runtime.MessageSender,
-			sendResponse: (response?: any) => void
+			sendResponse: (response?: StandardResponse) => void
 		) {
 			if (validateMessage && !validateMessage(message)) {
-				sendResponse({ status: "fail", error: "validateMessage failed" });
+				sendResponse({ status: false, message: "validateMessage failed" });
 				return false;
 			}
 
 			if (validateSender && !validateSender(sender)) {
-				sendResponse({ status: "fail", error: "validateSender failed" });
+				sendResponse({ status: false, message: "validateSender failed" });
 				return false;
 			}
 
-			sendResponse({ status: "ok", data: reply });
+			sendResponse({ status: true, data: replyCb });
 			return false;
 		};
 
@@ -111,24 +132,20 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 		const handler = function (
 			message: ExtensionMessageInterface,
 			sender: browser.runtime.MessageSender,
-			sendResponse: (response: {
-				isPassed: boolean;
-				response?: any;
-				data?: unknown;
-			}) => void
+			sendResponse: (response: StandardResponse) => void
 		) {
 			if (validateMessage && !validateMessage(message)) {
 				sendResponse?.({
-					isPassed: false,
-					response: "validateMessage failed",
+					status: false,
+					message: "validateMessage failed",
 				});
 				return false;
 			}
 
 			if (validateSender && !validateSender(sender)) {
 				sendResponse?.({
-					isPassed: false,
-					response: "validateSender failed",
+					status: false,
+					message: "validateSender failed",
 				});
 				return false;
 			}
@@ -137,14 +154,18 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 				try {
 					const data = await onAsyncCb?.(message, sender);
 
-					if (data === false) {
-						throw Error("async request returned a falsy value");
+					if (!data) {
+						throw new Error("onMessageAsync request returned a falsy value");
 					}
-					sendResponse?.({ isPassed: true, data, response: "async success" });
+					sendResponse?.({
+						status: true,
+						data,
+						message: "onMessageAsync success",
+					});
 				} catch (e: any) {
 					sendResponse?.({
-						isPassed: false,
-						response: e?.message ?? "async error",
+						status: false,
+						message: e?.message ?? "onMessageAsync returned an error",
 					});
 				}
 			})();

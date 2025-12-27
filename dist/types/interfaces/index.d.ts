@@ -87,19 +87,19 @@ export interface SendToContentInterface<T = any> {
  * Defines the structure for sending a message to a background script.
  * Generic types T (message) and R (response) allow type safety.
  */
-export interface MessageToBackgroundInterface<T = any, R = any> {
+export interface MessageToBackgroundInterface {
     /** The message payload to send to the background script */
-    message: ExtensionMessageInterface<T>;
+    message: ExtensionMessageInterface;
     /** Callback executed if sending the message fails */
-    errorCb: (error?: Error | string) => void;
+    errorCb: (error: StandardResponse) => void | boolean;
     /** Callback executed with the response from the background script */
-    successCb: (response?: R) => void | boolean;
+    successCb: (response?: StandardResponse) => void | boolean;
 }
 /**
  * Defines the structure of a synchronous message handler.
  * Generic R allows typing the reply payload.
  */
-export interface OnMessageSyncInterface<R = any> {
+export interface OnMessageSyncInterface {
     /**
      * Optional function to validate the message structure or content
      * before processing it.
@@ -111,7 +111,7 @@ export interface OnMessageSyncInterface<R = any> {
      */
     validateSender?: (sender: browser.runtime.MessageSender) => boolean;
     /** Optional reply object to send back to the sender */
-    reply?: R;
+    replyCb?: () => string | boolean | Record<any, any>;
 }
 /**
  * Defines the structure of an asynchronous message handler.
@@ -119,14 +119,14 @@ export interface OnMessageSyncInterface<R = any> {
 export interface OnMessageAsyncInterface<R = any> {
     validateMessage?: (msg: ExtensionMessageInterface) => boolean;
     validateSender?: (sender: browser.runtime.MessageSender) => boolean;
-    onAsyncCb?: (message: ExtensionMessageInterface, sender: browser.runtime.MessageSender) => Promise<any>;
+    onAsyncCb?: (message: ExtensionMessageInterface, sender: browser.runtime.MessageSender) => Promise<any> | boolean;
 }
 /**
  * Standardized response format for handlers.
  */
 export interface StandardResponse {
-    isPassed: boolean;
-    response?: any;
+    status: boolean;
+    message?: any;
     data?: unknown;
 }
 /**

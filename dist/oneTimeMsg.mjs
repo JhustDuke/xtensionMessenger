@@ -5,7 +5,8 @@ const m = function(d) {
     return new Promise((e, s) => {
       r ? e(browser.tabs.query(r)) : s(new Error("tab querying failed"));
     });
-  }, f = async function(r) {
+  };
+  async function f(r) {
     const { message: e, errorCb: s, successCb: o } = r;
     try {
       const a = await browser.runtime.sendMessage(e);
@@ -13,7 +14,7 @@ const m = function(d) {
     } catch (a) {
       s(a.message || a);
     }
-  };
+  }
   return {
     messageBackgroundScript: f,
     messagePopupScript: f,
@@ -37,7 +38,13 @@ const m = function(d) {
       }
     },
     onMessageSync: function(r) {
-      const { validateMessage: e, validateSender: s, reply: o = "default reply" } = r, a = function(n, c, t) {
+      const {
+        validateMessage: e,
+        validateSender: s,
+        replyCb: o = function() {
+          return "default reply";
+        }
+      } = r, a = function(n, c, t) {
         return e && !e(n) ? (t({ status: "fail", error: "validateMessage failed" }), !1) : s && !s(c) ? (t({ status: "fail", error: "validateSender failed" }), !1) : (t({ status: "ok", data: o }), !1);
       };
       browser.runtime.onMessage.addListener(a);

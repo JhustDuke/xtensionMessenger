@@ -101,10 +101,10 @@ messageBackgroundScript(options: MessageToBackgroundInterface): Promise<void>
 api.messageBackgroundScript({
 	message: { type: "PING" },
 	successCb: function (res) {
-		console.log(res);
+		console.log(res.data);
 	},
 	errorCb: function (err) {
-		console.error(err);
+		console.error(err.message);
 	},
 });
 ```
@@ -158,10 +158,10 @@ api.messageContentScript({
 	tabQueryProps: { active: true, currentWindow: true },
 	message: { type: "INJECT" },
 	successCb: function (res) {
-		console.log(res);
+		console.log(res.data);
 	},
 	errorCb: function (err) {
-		console.error(err);
+		console.error(err.message);
 	},
 });
 ```
@@ -184,11 +184,11 @@ onMessageSync(opts: OnMessageSyncInterface): void
 
 - **validateMessage?** `(msg) => boolean`
 - **validateSender?** `(sender) => boolean`
-- **reply?** `any` (default: "default reply")
+- **replyCb?** `()=>string | boolean | record<string,any>`
 
 ### Behavior
 
-- Validation failures immediately respond with `status: fail`
+- Validation failures immediately respond with `status: false`
 - Success responds immediately
 - Channel closes automatically
 
@@ -199,7 +199,9 @@ api.onMessageSync({
 	validateMessage: function (msg) {
 		return msg.type === "PING";
 	},
-	reply: "PONG",
+	replyCb: function () {
+		return "pong";
+	},
 });
 ```
 
@@ -260,7 +262,7 @@ onAsyncCb: async function () {
 All messages use:
 
 ```ts
-interface ExtensionMessageInterface<T = any> {
+interface ExtensionMessageInterface<T = unknown> {
 	type: string;
 	payload?: T;
 }
@@ -272,6 +274,16 @@ This ensures:
 - Optional structured payload
 
 ---
+
+## All responses (success or error) use
+
+```ts
+interface StandardResponse<T = unknown> {
+	status: boolean;
+	message?: string;
+	data?: T;
+}
+```
 
 ## Design Principles
 

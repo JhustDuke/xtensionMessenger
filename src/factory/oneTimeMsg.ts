@@ -118,7 +118,7 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 				return false;
 			}
 
-			sendResponse({ status: true, data: replyCb });
+			sendResponse({ status: true, data: replyCb() });
 			return false;
 		};
 

@@ -199,8 +199,12 @@ api.onMessageSync({
 	validateMessage: function (msg) {
 		return msg.type === "PING";
 	},
-	replyCb: function () {
-		return "pong";
+	validateSender: function (sender) {
+		return Boolean(sender.tab?.id);
+	},
+	onSyncCb: function (message, sender) {
+		// message is guaranteed valid here
+		if (message.type === "PING") return { pong: true };
 	},
 });
 ```

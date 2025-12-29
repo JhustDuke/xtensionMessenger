@@ -104,27 +104,29 @@ export interface MessageToBackgroundInterface {
  * Defines the structure of a synchronous message handler.
  * Generic R allows typing the reply payload.
  */
-export interface OnMessageSyncInterface<> {
-	/**
-	 * Optional function to validate the message structure or content
-	 * before processing it.
-	 */
+export interface OnMessageSyncInterface {
+	/**validation for the incoming message returns false if it fails */
 	validateMessage?: (message: ExtensionMessageInterface) => boolean;
-	/**
-	 * Optional function to validate the sender of the message.
-	 * Useful to ensure messages come from expected tabs or extensions.
-	 */
+	/**validation for the sender returns false if it fails */
 	validateSender?: (sender: browser.runtime.MessageSender) => boolean;
-	/** Optional reply object to send back to the sender */
-	replyCb?: () => string | boolean | Record<any, any>;
+	/**call back executed if the message succeeds and the user can have access to it here. ONLY USED FOR NON I/O TASk */
+	onSyncCb: (
+		message: ExtensionMessageInterface,
+		sender: browser.runtime.MessageSender
+	) => unknown;
 }
 
 /**
  * Defines the structure of an asynchronous message handler.
  */
 export interface OnMessageAsyncInterface<> {
-	validateMessage?: (msg: ExtensionMessageInterface) => boolean;
-	validateSender?: (sender: browser.runtime.MessageSender) => boolean;
+	/**validation for the incoming message returns false if it fails */
+	validateMessage?: (
+		msg: ExtensionMessageInterface
+	) => boolean /**validation for the sender returns false if it fails */;
+	validateSender?: (
+		sender: browser.runtime.MessageSender
+	) => boolean /**call back executed if the message succeeds and the user can have access to it here. ONLY USED FOR I/O TASK */;
 	onAsyncCb?: (
 		message: ExtensionMessageInterface,
 		sender: browser.runtime.MessageSender

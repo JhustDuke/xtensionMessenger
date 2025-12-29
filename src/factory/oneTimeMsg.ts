@@ -46,8 +46,15 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 		const { message, errorCb, successCb } = options;
 
 		try {
-			const response = await browser.runtime.sendMessage(message);
-			successCb({ status: true, data: response });
+			const response: StandardResponse = await browser.runtime.sendMessage(
+				message
+			);
+			if (!response.status) {
+				throw new Error(
+					response.message ?? "browser.runtime.sendMessage error"
+				);
+			}
+			successCb(response);
 		} catch (error: any) {
 			errorCb({
 				status: false,
@@ -64,29 +71,31 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 	const messageContentScript = async function (
 		options: SendToContentInterface
 	) {
-		const { tabQueryProps, message, errorCb, successCb } = options;
+		const { tabQueryProps, message, successCb, errorCb } = options;
 
 		try {
 			if (!tabQueryProps) {
 				throw new Error("tabQueryProps is undefined");
 			}
+
 			const tabs = await getTabsFn(tabQueryProps);
 			const targetTab = tabs.length > 0 ? tabs[0].id : null;
 
 			if (!targetTab) {
-				errorCb({ status: false, message: "no tabs found" });
-				return;
+				throw new Error("no tabs found"); // move to catch → handled by errorCb
 			}
 
 			const messageResponse = await browser.tabs.sendMessage(
 				targetTab,
 				message
 			);
+
+			// if messageResponse is already StandardResponse, forward it
 			successCb({ status: true, data: messageResponse });
-		} catch (error: any) {
+		} catch (err: any) {
 			errorCb({
 				status: false,
-				message: error.message ?? "unknown tab querying error",
+				message: err.message ?? "unknown tab querying error",
 			});
 		}
 	};
@@ -95,13 +104,7 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 	 * Listen for messages in background or content scripts
 	 */
 	const onMessageSync = function (opts: OnMessageSyncInterface) {
-		const {
-			validateMessage,
-			validateSender,
-			replyCb = function () {
-				return "default reply";
-			},
-		} = opts;
+		const { validateMessage, validateSender, onSyncCb } = opts;
 
 		const handler = function (
 			message: ExtensionMessageInterface,
@@ -118,7 +121,14 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 				return false;
 			}
 
-			sendResponse({ status: true, data: replyCb() });
+			const data = onSyncCb(message, sender);
+
+			sendResponse({
+				status: true,
+				data,
+				message: "onMessageSync success",
+			});
+
 			return false;
 		};
 
@@ -155,7 +165,7 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 					const data = await onAsyncCb?.(message, sender);
 
 					if (!data) {
-						throw new Error("onMessageAsync request returned a falsy value");
+						throw Error;
 					}
 					sendResponse?.({
 						status: true,

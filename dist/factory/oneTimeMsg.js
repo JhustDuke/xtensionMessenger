@@ -59,24 +59,27 @@ var oneTimeMsgFactory = function (scriptname) {
     function messageBackgroundScript(options) {
         return __awaiter(this, void 0, void 0, function () {
             var message, errorCb, successCb, response, error_1;
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         message = options.message, errorCb = options.errorCb, successCb = options.successCb;
-                        _b.label = 1;
+                        _c.label = 1;
                     case 1:
-                        _b.trys.push([1, 3, , 4]);
+                        _c.trys.push([1, 3, , 4]);
                         return [4 /*yield*/, browser.runtime.sendMessage(message)];
                     case 2:
-                        response = _b.sent();
-                        successCb({ status: true, data: response });
+                        response = _c.sent();
+                        if (!response.status) {
+                            throw new Error((_a = response.message) !== null && _a !== void 0 ? _a : "browser.runtime.sendMessage error");
+                        }
+                        successCb(response);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_1 = _b.sent();
+                        error_1 = _c.sent();
                         errorCb({
                             status: false,
-                            message: (_a = error_1.message) !== null && _a !== void 0 ? _a : "message to background script failed",
+                            message: (_b = error_1.message) !== null && _b !== void 0 ? _b : "message to background script failed",
                         });
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
@@ -91,12 +94,12 @@ var oneTimeMsgFactory = function (scriptname) {
      */
     var messageContentScript = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var tabQueryProps, message, errorCb, successCb, tabs, targetTab, messageResponse, error_2;
+            var tabQueryProps, message, successCb, errorCb, tabs, targetTab, messageResponse, err_1;
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        tabQueryProps = options.tabQueryProps, message = options.message, errorCb = options.errorCb, successCb = options.successCb;
+                        tabQueryProps = options.tabQueryProps, message = options.message, successCb = options.successCb, errorCb = options.errorCb;
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, 4, , 5]);
@@ -108,19 +111,19 @@ var oneTimeMsgFactory = function (scriptname) {
                         tabs = _b.sent();
                         targetTab = tabs.length > 0 ? tabs[0].id : null;
                         if (!targetTab) {
-                            errorCb({ status: false, message: "no tabs found" });
-                            return [2 /*return*/];
+                            throw new Error("no tabs found"); // move to catch → handled by errorCb
                         }
                         return [4 /*yield*/, browser.tabs.sendMessage(targetTab, message)];
                     case 3:
                         messageResponse = _b.sent();
+                        // if messageResponse is already StandardResponse, forward it
                         successCb({ status: true, data: messageResponse });
                         return [3 /*break*/, 5];
                     case 4:
-                        error_2 = _b.sent();
+                        err_1 = _b.sent();
                         errorCb({
                             status: false,
-                            message: (_a = error_2.message) !== null && _a !== void 0 ? _a : "unknown tab querying error",
+                            message: (_a = err_1.message) !== null && _a !== void 0 ? _a : "unknown tab querying error",
                         });
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
@@ -132,9 +135,7 @@ var oneTimeMsgFactory = function (scriptname) {
      * Listen for messages in background or content scripts
      */
     var onMessageSync = function (opts) {
-        var validateMessage = opts.validateMessage, validateSender = opts.validateSender, _a = opts.replyCb, replyCb = _a === void 0 ? function () {
-            return "default reply";
-        } : _a;
+        var validateMessage = opts.validateMessage, validateSender = opts.validateSender, onSyncCb = opts.onSyncCb;
         var handler = function (message, sender, sendResponse) {
             if (validateMessage && !validateMessage(message)) {
                 sendResponse({ status: false, message: "validateMessage failed" });
@@ -144,7 +145,12 @@ var oneTimeMsgFactory = function (scriptname) {
                 sendResponse({ status: false, message: "validateSender failed" });
                 return false;
             }
-            sendResponse({ status: true, data: replyCb() });
+            var data = onSyncCb(message, sender);
+            sendResponse({
+                status: true,
+                data: data,
+                message: "onMessageSync success",
+            });
             return false;
         };
         browser.runtime.onMessage.addListener(handler);
@@ -179,7 +185,7 @@ var oneTimeMsgFactory = function (scriptname) {
                             case 1:
                                 data = _b.sent();
                                 if (!data) {
-                                    throw new Error("onMessageAsync request returned a falsy value");
+                                    throw Error;
                                 }
                                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
                                     status: true,

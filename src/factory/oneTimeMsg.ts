@@ -123,6 +123,10 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 
 			const data = onSyncCb(message, sender);
 
+			if (data === undefined) {
+				console.warn(`onSyncCb returned "undefined"`);
+			}
+
 			sendResponse({
 				status: true,
 				data,
@@ -165,7 +169,9 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 					const data = await onAsyncCb?.(message, sender);
 
 					if (!data) {
-						throw Error;
+						console.warn(
+							`onMessageAsync returned undefined,null or a falsy value`
+						);
 					}
 					sendResponse?.({
 						status: true,
@@ -175,7 +181,9 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 				} catch (e: any) {
 					sendResponse?.({
 						status: false,
-						message: e?.message ?? "onMessageAsync returned an error",
+						message:
+							e?.message ??
+							"onMessageAsync returned undefined, false or a falsy value",
 					});
 				}
 			})();

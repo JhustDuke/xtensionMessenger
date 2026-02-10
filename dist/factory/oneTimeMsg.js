@@ -146,6 +146,9 @@ var oneTimeMsgFactory = function (scriptname) {
                 return false;
             }
             var data = onSyncCb(message, sender);
+            if (data === undefined) {
+                console.warn("onSyncCb returned \"undefined\"");
+            }
             sendResponse({
                 status: true,
                 data: data,
@@ -185,7 +188,7 @@ var oneTimeMsgFactory = function (scriptname) {
                             case 1:
                                 data = _b.sent();
                                 if (!data) {
-                                    throw Error;
+                                    console.warn("onMessageAsync returned undefined,null or a falsy value");
                                 }
                                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
                                     status: true,
@@ -197,7 +200,7 @@ var oneTimeMsgFactory = function (scriptname) {
                                 e_1 = _b.sent();
                                 sendResponse === null || sendResponse === void 0 ? void 0 : sendResponse({
                                     status: false,
-                                    message: (_a = e_1 === null || e_1 === void 0 ? void 0 : e_1.message) !== null && _a !== void 0 ? _a : "onMessageAsync returned an error",
+                                    message: (_a = e_1 === null || e_1 === void 0 ? void 0 : e_1.message) !== null && _a !== void 0 ? _a : "onMessageAsync returned undefined, false or a falsy value",
                                 });
                                 return [3 /*break*/, 3];
                             case 3: return [2 /*return*/];

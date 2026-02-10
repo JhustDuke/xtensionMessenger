@@ -1,6 +1,6 @@
 # oneTimeMsgFactory
 
-A small, opinionated messaging utility for **WebExtensions** (Firefox ) that standardizes **one-time messaging**, **tab querying**, and **safe message listeners** across **background**, **content**, and **popup** scripts.
+A small, opinionated messaging utility for **WebExtensions** (Firefox ) that standardizes **one-time messaging**, **tab querying**, and **safe message listeners** across **background**, **content**, and **popup** scripts. To use with Chrome install the **npm i webextension-polyfill** and include before each script as needed **follow their docs for more info**
 
 This factory centralizes:
 
@@ -92,8 +92,8 @@ messageBackgroundScript(options: MessageToBackgroundInterface): Promise<void>
 ### Options
 
 - **message**: `ExtensionMessageInterface`
-- **successCb**: `(response: any) => void`
-- **errorCb**: `(error: any) => void`
+- **successCb**: `(response: standardResponseInterface) => void`
+- **errorCb**: `(error: standardResponseInterface) => void`
 
 ### Example
 
@@ -142,8 +142,8 @@ messageContentScript(options: SendToContentInterface): Promise<void>
 
 - **tabQueryProps**: tab query used to locate target tab
 - **message**: `ExtensionMessageInterface`
-- **successCb**: `(response: any) => void`
-- **errorCb**: `(error: any) => void`
+- **successCb**: `(response: standardResponseInterface) => void`
+- **errorCb**: `(error: standardResponseInterfacey) => void`
 
 ### Behavior
 
@@ -184,7 +184,7 @@ onMessageSync(opts: OnMessageSyncInterface): void
 
 - **validateMessage?** `(msg) => boolean`
 - **validateSender?** `(sender) => boolean`
-- **replyCb?** `()=>string | boolean | record<string,any>`
+- **onSyncCb?** `()=>string | boolean | record<string,any>`
 
 ### Behavior
 
@@ -233,7 +233,7 @@ onMessageAsync(opts: OnMessageAsyncInterface): void
 
 1. Runs validators
 2. Executes async callback
-3. If callback returns `false` → treated as error
+3. If callback returns `false` → a console.warn is generated
 4. Any thrown error is caught and returned
 5. Message channel kept open (`return true`)
 
@@ -255,7 +255,7 @@ api.onMessageAsync({
 
 ```ts
 onAsyncCb: async function () {
-  return false; // will trigger error response
+  return false; // will trigger a warning same with any falsy value
 }
 ```
 

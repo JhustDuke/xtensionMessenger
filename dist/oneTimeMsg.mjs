@@ -1,104 +1,104 @@
-const y = function(l) {
-  const u = /* @__PURE__ */ new Date();
+const w = function(l) {
+  const i = /* @__PURE__ */ new Date();
   console.log(
     l || "unknown-script",
     "ran",
-    u.getHours(),
+    i.getHours(),
     ":",
-    u.getMinutes()
+    i.getMinutes()
   );
-  const g = function(a) {
+  const g = function(t) {
     return new Promise((e, s) => {
-      a ? e(browser.tabs.query(a)) : s(new Error("tab querying failed"));
+      t ? e(browser.tabs.query(t)) : s(new Error("tab querying failed"));
     });
   };
-  async function f(a) {
-    const { message: e, errorCb: s, successCb: c } = a;
+  async function f(t) {
+    const { message: e, errorCb: s, successCb: c } = t;
     try {
-      const t = await browser.runtime.sendMessage(
+      const a = await browser.runtime.sendMessage(
         e
       );
-      if (!t.status)
+      if (!a.status)
         throw new Error(
-          t.message ?? "browser.runtime.sendMessage error"
+          a.message ?? "browser.runtime.sendMessage error"
         );
-      c(t);
-    } catch (t) {
+      c(a);
+    } catch (a) {
       s({
         status: !1,
-        message: t.message ?? "message to background script failed"
+        message: a.message ?? "message to background script failed"
       });
     }
   }
   return {
     messageBackgroundScript: f,
     messagePopupScript: f,
-    messageContentScript: async function(a) {
-      const { tabQueryProps: e, message: s, successCb: c, errorCb: t } = a;
+    messageContentScript: async function(t) {
+      const { tabQueryProps: e, message: s, successCb: c, errorCb: a } = t;
       try {
         if (!e)
           throw new Error("tabQueryProps is undefined");
-        const r = await g(e), o = r.length > 0 ? r[0].id : null;
+        const n = await g(e), o = n.length > 0 ? n[0].id : null;
         if (!o)
           throw new Error("no tabs found");
-        const n = await browser.tabs.sendMessage(
+        const r = await browser.tabs.sendMessage(
           o,
           s
         );
-        c({ status: !0, data: n });
-      } catch (r) {
-        t({
+        c({ status: !0, data: r });
+      } catch (n) {
+        a({
           status: !1,
-          message: r.message ?? "unknown tab querying error"
+          message: n.message ?? "unknown tab querying error"
         });
       }
     },
-    onMessageSync: function(a) {
-      const { validateMessage: e, validateSender: s, onSyncCb: c } = a, t = function(r, o, n) {
-        if (e && !e(r))
-          return n({ status: !1, message: "validateMessage failed" }), !1;
+    onMessageSync: function(t) {
+      const { validateMessage: e, validateSender: s, onSyncCb: c } = t, a = function(n, o, r) {
+        if (e && !e(n))
+          return r({ status: !1, message: "validateMessage failed" }), !1;
         if (s && !s(o))
-          return n({ status: !1, message: "validateSender failed" }), !1;
-        const i = c(r, o);
-        return n({
+          return r({ status: !1, message: "validateSender failed" }), !1;
+        const u = c(n, o);
+        return u === void 0 && console.warn('onSyncCb returned "undefined"'), r({
           status: !0,
-          data: i,
+          data: u,
           message: "onMessageSync success"
         }), !1;
       };
-      browser.runtime.onMessage.addListener(t);
+      browser.runtime.onMessage.addListener(a);
     },
-    onMessageAsync: function(a) {
-      const { validateMessage: e, validateSender: s, onAsyncCb: c } = a, t = function(r, o, n) {
-        return e && !e(r) ? (n?.({
+    onMessageAsync: function(t) {
+      const { validateMessage: e, validateSender: s, onAsyncCb: c } = t, a = function(n, o, r) {
+        return e && !e(n) ? (r?.({
           status: !1,
           message: "validateMessage failed"
-        }), !1) : s && !s(o) ? (n?.({
+        }), !1) : s && !s(o) ? (r?.({
           status: !1,
           message: "validateSender failed"
         }), !1) : ((async function() {
           try {
-            const i = await c?.(r, o);
-            if (!i)
-              throw Error;
-            n?.({
+            const u = await c?.(n, o);
+            u || console.warn(
+              "onMessageAsync returned undefined,null or a falsy value"
+            ), r?.({
               status: !0,
-              data: i,
+              data: u,
               message: "onMessageAsync success"
             });
-          } catch (i) {
-            n?.({
+          } catch (u) {
+            r?.({
               status: !1,
-              message: i?.message ?? "onMessageAsync returned an error"
+              message: u?.message ?? "onMessageAsync returned undefined, false or a falsy value"
             });
           }
         })(), !0);
       };
-      browser.runtime.onMessage.addListener(t);
+      browser.runtime.onMessage.addListener(a);
     },
     getTabsFn: g
   };
 };
 export {
-  y as oneTimeMsgFactory
+  w as oneTimeMsgFactory
 };

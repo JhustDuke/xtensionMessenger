@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "ES5",
+		"lib": ["ES2015", "DOM"],
 		"module": "CommonJS",
 		"types": ["firefox-webext-browser", "node", "jest"],
 		"outDir": "dist", // Outputs compiled JS files to 'src'
@@ -8,7 +9,6 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"incremental": true,
 		"declaration": true,
 		"declarationDir": "dist/types/",
 		"emitDeclarationOnly": false,

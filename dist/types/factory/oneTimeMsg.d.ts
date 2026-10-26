@@ -1,12 +1,12 @@
 import { TabQueryPropsInterface, SendToContentInterface, OnMessageAsyncInterface, OnMessageSyncInterface, BrowserTabInterface, FutureTabQueryProps, ExtensionMessageInterface, StandardResponse } from "../interfaces";
 export declare const oneTimeMsgFactory: (scriptname?: string) => {
     messageBackgroundScript: (options: {
-        message: ExtensionMessageInterface;
+        messageToSend: ExtensionMessageInterface;
         successCb: (response: StandardResponse) => void;
         errorCb: (error: StandardResponse) => void;
     }) => Promise<void>;
     messagePopupScript: (options: {
-        message: ExtensionMessageInterface;
+        messageToSend: ExtensionMessageInterface;
         successCb: (response: StandardResponse) => void;
         errorCb: (error: StandardResponse) => void;
     }) => Promise<void>;

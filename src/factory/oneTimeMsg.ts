@@ -1,12 +1,13 @@
+import browser, { Runtime } from "webextension-polyfill";
 import {
 	TabQueryPropsInterface,
 	SendToContentInterface,
-	MessageToBackgroundInterface,
 	OnMessageAsyncInterface,
 	OnMessageSyncInterface,
 	BrowserTabInterface,
 	FutureTabQueryProps,
 	ExtensionMessageInterface,
+	TabMessageResult,
 	StandardResponse,
 } from "../interfaces"; // adjust the path
 
@@ -20,9 +21,6 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 		logTime.getMinutes()
 	);
 
-	/**
-	 * Returns all active tabs based on query options
-	 */
 	const getTabsFn = function (
 		tabQueryOptions: TabQueryPropsInterface | FutureTabQueryProps
 	): Promise<BrowserTabInterface[]> {
@@ -35,153 +33,168 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 		});
 	};
 
-	/**
-	 * Send a message to the background script
-	 */
 	async function messageBackgroundScript(options: {
-		message: ExtensionMessageInterface;
+		messageToSend: ExtensionMessageInterface;
 		successCb: (response: StandardResponse) => void;
 		errorCb: (error: StandardResponse) => void;
 	}) {
-		const { message, errorCb, successCb } = options;
+		const { messageToSend, errorCb, successCb } = options;
+
+		let response: StandardResponse;
 
 		try {
-			const response: StandardResponse = await browser.runtime.sendMessage(
-				message
-			);
+			response = await browser.runtime.sendMessage(messageToSend);
+			if (!response) {
+				throw new Error("no listener handled this message"); //e.g. type "UNKNOWN_TYPE"
+			}
 			if (!response.status) {
 				throw new Error(
-					response.message ?? "browser.runtime.sendMessage error"
+					response.errorMessage ?? "browser.runtime.sendMessage error"
 				);
 			}
-			successCb(response);
 		} catch (error: any) {
 			errorCb({
 				status: false,
-				message: error.message ?? "message to background script failed",
+				errorMessage: error.message ?? "message to background script failed",
 			});
+			return;
 		}
+		successCb(response);
 	}
 
 	//same struc as messageBackgroundScript kept for eaase of use
 	const messagePopupScript = messageBackgroundScript;
-	/**
-	 * Send a message to content scripts
-	 */
+
 	const messageContentScript = async function (
 		options: SendToContentInterface
 	) {
-		const { tabQueryProps, message, successCb, errorCb } = options;
+		const { tabQueryProps, messageToSend, successCb, errorCb } = options;
+
+		const allTabResponses: TabMessageResult[] = [];
 
 		try {
 			if (!tabQueryProps) {
 				throw new Error("tabQueryProps is undefined");
 			}
 
-			const tabs = await getTabsFn(tabQueryProps);
-			const targetTab = tabs.length > 0 ? tabs[0].id : null;
+			const matchingTabs = await getTabsFn(tabQueryProps);
 
-			if (!targetTab) {
+			if (matchingTabs.length === 0) {
 				throw new Error("no tabs found"); // move to catch → handled by errorCb
 			}
 
-			const messageResponse = await browser.tabs.sendMessage(
-				targetTab,
-				message
-			);
+			for (let tabIndex = 0; tabIndex < matchingTabs.length; tabIndex++) {
+				const tabInfo = matchingTabs[tabIndex];
 
-			// if messageResponse is already StandardResponse, forward it
-			successCb({ status: true, data: messageResponse });
+				if (tabInfo.id === undefined) {
+					continue;
+				}
+
+				// this is done to solve the nested if problem
+				const currentTabResponse: StandardResponse = (await browser.tabs
+					.sendMessage(tabInfo.id, messageToSend)
+					.catch(function (tabError: any) {
+						// e.g. tab 12 is a chrome:// page with no content script
+						return { status: false, errorMessage: tabError.message };
+					})) as StandardResponse;
+
+				allTabResponses.push({
+					tabInfo,
+					response: currentTabResponse || {
+						status: false,
+						errorMessage: "no listener handled this message", // e.g. type "UNKNOWN_TYPE"
+					},
+				});
+			}
 		} catch (err: any) {
 			errorCb({
 				status: false,
-				message: err.message ?? "unknown tab querying error",
+				errorMessage: err.message ?? "unknown tab querying error",
 			});
+			return;
 		}
+
+		successCb({
+			status: true,
+			data: allTabResponses,
+		});
 	};
 
-	/**
-	 * Listen for messages in background or content scripts
-	 */
 	const onMessageSync = function (opts: OnMessageSyncInterface) {
 		const { validateMessage, validateSender, onSyncCb } = opts;
 
 		const handler = function (
-			message: ExtensionMessageInterface,
-			sender: browser.runtime.MessageSender,
+			message: unknown, //any script can send anything, so it arrives as unknown
+			sender: Runtime.MessageSender,
 			sendResponse: (response?: StandardResponse) => void
 		) {
-			if (validateMessage && !validateMessage(message)) {
-				sendResponse({ status: false, message: "validateMessage failed" });
-				return false;
+			const extensionMessage = message as ExtensionMessageInterface;
+			if (validateMessage && validateMessage(extensionMessage) !== true) {
+				return undefined; //not my message, let another listener answer
 			}
 
-			if (validateSender && !validateSender(sender)) {
-				sendResponse({ status: false, message: "validateSender failed" });
-				return false;
+			if (validateSender && validateSender(sender) !== true) {
+				sendResponse({ status: false, errorMessage: "validateSender failed" });
+				return undefined;
 			}
 
-			const data = onSyncCb(message, sender);
+			const data = onSyncCb(extensionMessage, sender);
 
 			if (data === undefined) {
-				console.warn(`onSyncCb returned "undefined"`);
+				console.warn(
+					`onSyncCb returned undefined, return a value (or null on purpose)`
+				);
 			}
-
 			sendResponse({
 				status: true,
 				data,
-				message: "onMessageSync success",
 			});
 
-			return false;
+			return undefined;
 		};
 
-		browser.runtime.onMessage.addListener(handler);
+		browser.runtime.onMessage.addListener(handler as Runtime.OnMessageListener);
 	};
 
-	// --- ASYNC LISTENER ---
 	const onMessageAsync = function (opts: OnMessageAsyncInterface) {
 		const { validateMessage, validateSender, onAsyncCb } = opts;
 
 		const handler = function (
-			message: ExtensionMessageInterface,
-			sender: browser.runtime.MessageSender,
+			message: unknown, //any script can send anything, so it arrives as unknown
+			sender: Runtime.MessageSender,
 			sendResponse: (response: StandardResponse) => void
 		) {
-			if (validateMessage && !validateMessage(message)) {
-				sendResponse?.({
-					status: false,
-					message: "validateMessage failed",
-				});
-				return false;
+			const extensionMessage = message as ExtensionMessageInterface;
+
+			if (validateMessage && validateMessage(extensionMessage) !== true) {
+				return undefined; //not my message, let another listener answer
 			}
 
-			if (validateSender && !validateSender(sender)) {
+			if (validateSender && validateSender(sender) !== true) {
 				sendResponse?.({
 					status: false,
-					message: "validateSender failed",
+					errorMessage: "validateSender failed",
 				});
-				return false;
+				return undefined;
 			}
 
 			(async function () {
 				try {
-					const data = await onAsyncCb?.(message, sender);
+					const data = await onAsyncCb?.(extensionMessage, sender);
 
-					if (!data) {
+					if (data === undefined) {
 						console.warn(
-							`onMessageAsync returned undefined,null or a falsy value`
+							`onAsyncCb returned undefined, return a value (or null on purpose)`
 						);
 					}
 					sendResponse?.({
 						status: true,
 						data,
-						message: "onMessageAsync success",
 					});
 				} catch (e: any) {
 					sendResponse?.({
 						status: false,
-						message:
+						errorMessage:
 							e?.message ??
 							"onMessageAsync returned undefined, false or a falsy value",
 					});
@@ -191,7 +204,7 @@ export const oneTimeMsgFactory = function (scriptname?: string) {
 			return true; // keep channel open
 		};
 
-		browser.runtime.onMessage.addListener(handler);
+		browser.runtime.onMessage.addListener(handler as Runtime.OnMessageListener);
 	};
 
 	return {
